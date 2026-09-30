@@ -23,3 +23,30 @@ jobs:
         with:
           name: family-shopping-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      # The steps above build without Firebase config. Once the real app/google-services.json is added, the build
+      # also applies the Google services plugin; make sure that path compiles too, using a throwaway config.
+      - name: Check the Firebase-configured build still compiles
+        if: hashFiles('app/google-services.json') == ''
+        run: |
+          cat > app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "123456789012",
+              "project_id": "ci-dummy",
+              "storage_bucket": "ci-dummy.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef",
+                  "android_client_info": { "package_name": "com.family.shoppinglist" }
+                },
+                "api_key": [ { "current_key": "AIzaSyCiDummyKeyForBuildCheckOnly0000000" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+          ./gradlew :app:assembleDebug
+          rm app/google-services.json

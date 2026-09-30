@@ -79,7 +79,8 @@ class SessionViewModel(private val app: ShoppingApp) : ViewModel() {
                 DEFAULT_STORES.forEach { batch.set(ref.collection("stores").document(), mapOf("name" to it)) }
                 val lastReset = ResetScheduler.schedule.latestAtOrBefore(ZonedDateTime.now()).toInstant().toEpochMilli()
                 batch.set(ref.collection("meta").document("reset"), mapOf("lastResetAt" to lastReset))
-                withTimeoutOrNull(NETWORK_TIMEOUT_MS) { batch.commit().await() } != null
+                // commit() yields no value, so return true explicitly; null means we timed out.
+                withTimeoutOrNull(NETWORK_TIMEOUT_MS) { batch.commit().await(); true } == true
             } catch (e: Exception) {
                 Log.w(TAG, "Create family failed", e)
                 false
