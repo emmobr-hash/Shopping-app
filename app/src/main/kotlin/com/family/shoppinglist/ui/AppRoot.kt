@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -26,16 +26,36 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 private enum class Tab(val label: String, val icon: ImageVector) {
     List("List", Icons.AutoMirrored.Filled.List),
     Offers("Offers", Icons.Filled.Star),
     Regulars("Regulars", Icons.Filled.Refresh),
-    Stores("Stores", Icons.Filled.Place),
+    Settings("Settings", Icons.Filled.Settings),
 }
 
 @Composable
-fun AppRoot(vm: AppViewModel) {
+fun AppRoot(session: SessionViewModel) {
+    val state by session.state.collectAsStateWithLifecycle()
+    when (val s = state) {
+        Session.NotConfigured -> NotConfiguredScreen()
+        Session.Loading -> LoadingScreen()
+        is Session.Failed -> FailedScreen(s.message, onRetry = session::start)
+        is Session.NeedsFamily -> FamilyScreen(s, onCreate = session::createFamily, onJoin = session::joinFamily)
+        is Session.Ready -> {
+            // Keyed by code so leaving one family and joining another starts with fresh data.
+            val vm: AppViewModel = viewModel(key = s.code, factory = viewModelFactory { initializer { AppViewModel(s.repository) } })
+            MainScreen(vm, s.code, onLeaveFamily = session::leaveFamily)
+        }
+    }
+}
+
+@Composable
+private fun MainScreen(vm: AppViewModel, familyCode: String, onLeaveFamily: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val context = LocalContext.current
 
@@ -48,6 +68,17 @@ fun AppRoot(vm: AppViewModel) {
             putExtra(Intent.EXTRA_TEXT, vm.shareText())
         }
         context.startActivity(Intent.createChooser(send, "Share shopping list"))
+    }
+
+    val shareCode: () -> Unit = {
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(
+                Intent.EXTRA_TEXT,
+                "Join our family shopping list: open Family Shopping, tap \"Join\" and enter ${SessionViewModel.display(familyCode)}",
+            )
+        }
+        context.startActivity(Intent.createChooser(send, "Send family code"))
     }
 
     Scaffold(
@@ -70,7 +101,7 @@ fun AppRoot(vm: AppViewModel) {
                 Tab.List -> ListScreen(vm, onShare = share)
                 Tab.Offers -> OffersScreen(vm)
                 Tab.Regulars -> RegularsScreen(vm)
-                Tab.Stores -> StoresScreen(vm)
+                Tab.Settings -> SettingsScreen(vm, familyCode, onShareCode = shareCode, onLeaveFamily = onLeaveFamily)
             }
         }
     }

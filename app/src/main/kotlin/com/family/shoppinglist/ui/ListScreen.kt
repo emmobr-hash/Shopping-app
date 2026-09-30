@@ -50,8 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.family.shoppinglist.core.NameMatcher
 import com.family.shoppinglist.data.ANY_STORE
-import com.family.shoppinglist.data.ItemEntity
-import com.family.shoppinglist.data.StoreEntity
+import com.family.shoppinglist.data.Item
+import com.family.shoppinglist.data.Store
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,9 +61,9 @@ fun ListScreen(vm: AppViewModel, onShare: () -> Unit) {
     val stats by vm.stats.collectAsStateWithLifecycle()
     val filter by vm.storeFilter.collectAsStateWithLifecycle()
 
-    var editing by remember { mutableStateOf<ItemEntity?>(null) }
+    var editing by remember { mutableStateOf<Item?>(null) }
     var newName by rememberSaveable { mutableStateOf("") }
-    var pickedStore by rememberSaveable { mutableStateOf<Long?>(null) }
+    var pickedStore by rememberSaveable { mutableStateOf<String?>(null) }
     // New items default to whichever supermarket tab you're looking at.
     val addStore = pickedStore ?: filter?.takeIf { it != ANY_STORE }
 
@@ -234,9 +234,9 @@ private fun ItemRow(ui: ItemUi, vm: AppViewModel, onEdit: () -> Unit) {
 
 @Composable
 private fun ItemDialog(
-    item: ItemEntity,
-    stores: List<StoreEntity>,
-    onSave: (ItemEntity) -> Unit,
+    item: Item,
+    stores: List<Store>,
+    onSave: (Item) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(item.name) }

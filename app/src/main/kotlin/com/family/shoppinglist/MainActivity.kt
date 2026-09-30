@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.family.shoppinglist.ui.AppRoot
-import com.family.shoppinglist.ui.AppViewModel
+import com.family.shoppinglist.ui.SessionViewModel
 import com.family.shoppinglist.ui.theme.ShoppingTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShoppingTheme {
-                AppRoot(viewModel(factory = AppViewModel.Factory))
+                AppRoot(viewModel(factory = SessionViewModel.Factory))
             }
         }
     }

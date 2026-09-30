@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services) apply false
 }
 
 android {
@@ -52,9 +52,16 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.androidx.work.runtime.ktx)
+}
+
+// Firebase is configured by app/google-services.json (see README). Without it the app still builds and
+// shows a "set up Firebase" screen, so CI works before the file has been added.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }

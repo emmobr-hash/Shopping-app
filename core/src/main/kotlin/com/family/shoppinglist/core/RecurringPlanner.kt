@@ -11,12 +11,12 @@ object RecurringPlanner {
     }
 
     /** Cadence entries that are due today and aren't already sitting on the list. */
-    fun dueCadenceIds(entries: List<RecurringEntry>, onList: Set<Long>, today: LocalDate): List<Long> =
+    fun dueCadenceIds(entries: List<RecurringEntry>, onList: Set<String>, today: LocalDate): List<String> =
         entries.filter { it.id !in onList }
             .filter { entry -> nextDue(entry)?.let { !it.isAfter(today) } == true }
             .map { it.id }
 
     /** Weekly entries that need adding at a reset because they aren't already on the list. */
-    fun weeklyIdsToAdd(entries: List<RecurringEntry>, onList: Set<Long>): List<Long> =
+    fun weeklyIdsToAdd(entries: List<RecurringEntry>, onList: Set<String>): List<String> =
         entries.filter { it.recurrence == Recurrence.EveryWeek && it.id !in onList }.map { it.id }
 }

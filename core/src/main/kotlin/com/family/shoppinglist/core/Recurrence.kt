@@ -26,7 +26,7 @@ sealed interface Recurrence {
 }
 
 data class RecurringEntry(
-    val id: Long,
+    val id: String,
     val recurrence: Recurrence,
     /** First day the item may appear (cadence items only). */
     val startsOn: LocalDate,

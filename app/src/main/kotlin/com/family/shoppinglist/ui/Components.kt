@@ -11,14 +11,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.family.shoppinglist.data.StoreEntity
+import com.family.shoppinglist.data.Store
 
 /** Picks a supermarket, or "Any store" (null) for things you'll buy wherever's convenient. */
 @Composable
 fun StoreDropdown(
-    stores: List<StoreEntity>,
-    selectedId: Long?,
-    onSelect: (Long?) -> Unit,
+    stores: List<Store>,
+    selectedId: String?,
+    onSelect: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var open by remember { mutableStateOf(false) }

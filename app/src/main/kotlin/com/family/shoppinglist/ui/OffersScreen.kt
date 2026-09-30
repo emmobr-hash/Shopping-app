@@ -39,8 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.family.shoppinglist.data.OfferEntity
-import com.family.shoppinglist.data.StoreEntity
+import com.family.shoppinglist.data.Offer
+import com.family.shoppinglist.data.Store
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -53,14 +53,14 @@ private val dayFormat = DateTimeFormatter.ofPattern("d MMM")
 fun OffersScreen(vm: AppViewModel) {
     val board by vm.offerBoard.collectAsStateWithLifecycle()
     val stores by vm.stores.collectAsStateWithLifecycle()
-    // null = closed, id 0 = new offer
-    var editing by remember { mutableStateOf<OfferEntity?>(null) }
+    // null = closed, blank id = new offer
+    var editing by remember { mutableStateOf<Offer?>(null) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = { TopAppBar(title = { Text("Special offers") }) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { editing = OfferEntity(product = "", price = "") }) {
+            FloatingActionButton(onClick = { editing = Offer(product = "", price = "") }) {
                 Icon(Icons.Filled.Add, "Add offer")
             }
         },
@@ -136,9 +136,9 @@ private fun OfferRow(ui: OfferUi, vm: AppViewModel, onEdit: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OfferDialog(
-    offer: OfferEntity,
-    stores: List<StoreEntity>,
-    onSave: (OfferEntity) -> Unit,
+    offer: Offer,
+    stores: List<Store>,
+    onSave: (Offer) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var product by remember { mutableStateOf(offer.product) }
@@ -150,11 +150,11 @@ private fun OfferDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (offer.id == 0L) "Add offer" else "Edit offer") },
+        title = { Text(if (offer.id.isEmpty()) "Add offer" else "Edit offer") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(product, { product = it }, label = { Text("Product") }, singleLine = true)
-                OutlinedTextField(price, { price = it }, label = { Text("Offer price, e.g. £1.50 or 2 for £3") }, singleLine = true)
+                OutlinedTextField(price, { price = it }, label = { Text("Offer price, e.g. €1.50 or 2 for €3") }, singleLine = true)
                 OutlinedTextField(wasPrice, { wasPrice = it }, label = { Text("Normal price (optional)") }, singleLine = true)
                 StoreDropdown(stores, storeId, onSelect = { storeId = it })
                 OutlinedButton(onClick = { pickingDate = true }) {

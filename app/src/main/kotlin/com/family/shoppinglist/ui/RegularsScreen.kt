@@ -44,8 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.family.shoppinglist.core.CadenceUnit
 import com.family.shoppinglist.core.RecurringPlanner
-import com.family.shoppinglist.data.RecurringEntity
-import com.family.shoppinglist.data.StoreEntity
+import com.family.shoppinglist.data.Regular
+import com.family.shoppinglist.data.Store
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -56,7 +56,7 @@ private fun unitLabel(unit: CadenceUnit, amount: Int): String {
     return if (amount == 1) singular else singular + "s"
 }
 
-private fun describe(e: RecurringEntity, today: LocalDate): String {
+private fun describe(e: Regular, today: LocalDate): String {
     if (e.weekly) return "Every Sunday"
     val every = "Every ${if (e.cadenceAmount == 1) "" else "${e.cadenceAmount} "}${unitLabel(CadenceUnit.valueOf(e.cadenceUnit), e.cadenceAmount)}"
     val next = RecurringPlanner.nextDue(e.toEntry()) ?: return every
@@ -66,10 +66,10 @@ private fun describe(e: RecurringEntity, today: LocalDate): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegularsScreen(vm: AppViewModel) {
-    val regulars by vm.recurring.collectAsStateWithLifecycle()
+    val regulars by vm.regulars.collectAsStateWithLifecycle()
     val stores by vm.stores.collectAsStateWithLifecycle()
-    // null = closed, id 0 = new regular
-    var editing by remember { mutableStateOf<RecurringEntity?>(null) }
+    // null = closed, blank id = new regular
+    var editing by remember { mutableStateOf<Regular?>(null) }
     val today = LocalDate.now()
 
     Scaffold(
@@ -77,7 +77,7 @@ fun RegularsScreen(vm: AppViewModel) {
         topBar = { TopAppBar(title = { Text("Regular items") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                editing = RecurringEntity(name = "", weekly = true, startsOn = today.toEpochDay())
+                editing = Regular(name = "", weekly = true, startsOn = today.toEpochDay())
             }) { Icon(Icons.Filled.Add, "Add regular item") }
         },
     ) { padding ->
@@ -103,7 +103,7 @@ fun RegularsScreen(vm: AppViewModel) {
                         Text(describe(r, today) + (store?.let { " · $it" } ?: ""))
                     },
                     trailingContent = {
-                        IconButton(onClick = { vm.deleteRecurring(r) }) { Icon(Icons.Filled.Delete, "Delete ${r.name}") }
+                        IconButton(onClick = { vm.deleteRegular(r) }) { Icon(Icons.Filled.Delete, "Delete ${r.name}") }
                     },
                 )
                 HorizontalDivider()
@@ -115,7 +115,7 @@ fun RegularsScreen(vm: AppViewModel) {
         RegularDialog(
             existing = entry,
             stores = stores,
-            onSave = { vm.saveRecurring(it); editing = null },
+            onSave = { vm.saveRegular(it); editing = null },
             onDismiss = { editing = null },
         )
     }
@@ -123,12 +123,12 @@ fun RegularsScreen(vm: AppViewModel) {
 
 @Composable
 private fun RegularDialog(
-    existing: RecurringEntity,
-    stores: List<StoreEntity>,
-    onSave: (RecurringEntity) -> Unit,
+    existing: Regular,
+    stores: List<Store>,
+    onSave: (Regular) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val isNew = existing.id == 0L
+    val isNew = existing.id.isEmpty()
     var name by remember { mutableStateOf(existing.name) }
     var quantity by remember { mutableStateOf(existing.quantity) }
     var storeId by remember { mutableStateOf(existing.storeId) }
