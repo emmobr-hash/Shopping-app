@@ -3,9 +3,7 @@ package com.family.shoppinglist.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.family.shoppinglist.core.NameMatcher
 import com.family.shoppinglist.data.Item
-import com.family.shoppinglist.data.Offer
 import com.family.shoppinglist.data.Regular
 import com.family.shoppinglist.data.ShoppingRepository
 import com.family.shoppinglist.data.Store
@@ -20,12 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class OfferUi(val offer: Offer, val storeName: String?, val reason: String?)
-
-data class ItemUi(val item: Item, val storeName: String?, val offers: List<OfferUi>)
-
-/** Offers split into ones relevant to you (list, regulars, frequent buys) and everything else. */
-data class OfferBoard(val forYou: List<OfferUi>, val others: List<OfferUi>)
+data class ItemUi(val item: Item, val storeName: String?)
 
 class AppViewModel(private val repo: ShoppingRepository) : ViewModel() {
 
@@ -37,38 +30,18 @@ class AppViewModel(private val repo: ShoppingRepository) : ViewModel() {
     val stores = repo.storesFlow.state(emptyList())
     val regulars = repo.regularsFlow.state(emptyList())
     val stats = repo.statsFlow.state(emptyList())
-    private val offers = repo.offersFlow.state(emptyList())
 
     /** null = all stores, [com.family.shoppinglist.data.ANY_STORE] = items not tied to a supermarket, otherwise a store id. */
     val storeFilter = MutableStateFlow<String?>(null)
 
-    val listItems: StateFlow<List<ItemUi>> = combine(items, stores, offers) { items, stores, offers ->
+    val listItems: StateFlow<List<ItemUi>> = combine(items, stores) { items, stores ->
         val names = stores.associate { it.id to it.name }
         items.map { item ->
             // Items pointing at a store that has since been deleted count as "any store".
             val storeId = item.storeId?.takeIf { it in names }
-            val matching = if (item.checked) emptyList() else offers
-                .filter { NameMatcher.matches(item.name, it.product) }
-                .map { OfferUi(it, it.storeId?.let(names::get), null) }
-            ItemUi(item.copy(storeId = storeId), storeId?.let(names::get), matching)
+            ItemUi(item.copy(storeId = storeId), storeId?.let(names::get))
         }
     }.state(emptyList())
-
-    val offerBoard: StateFlow<OfferBoard> = combine(offers, stores, stats, items, regulars) { offers, stores, stats, items, regulars ->
-        val names = stores.associate { it.id to it.name }
-        val frequent = stats.filter { it.count >= NameMatcher.FREQUENT_THRESHOLD }
-        val ui = offers.map { offer ->
-            val reason = when {
-                items.any { !it.checked && NameMatcher.matches(it.name, offer.product) } -> "On your list"
-                regulars.any { NameMatcher.matches(it.name, offer.product) } -> "One of your regulars"
-                else -> frequent.firstOrNull { NameMatcher.matches(it.displayName, offer.product) }
-                    ?.let { "You buy this often (${it.count}x)" }
-            }
-            OfferUi(offer, offer.storeId?.let(names::get), reason)
-        }
-        val (relevant, rest) = ui.partition { it.reason != null }
-        OfferBoard(relevant, rest)
-    }.state(OfferBoard(emptyList(), emptyList()))
 
     init {
         maintain()
@@ -132,10 +105,6 @@ class AppViewModel(private val repo: ShoppingRepository) : ViewModel() {
         if (storeFilter.value == store.id) storeFilter.value = null
         repo.deleteStore(store)
     }
-
-    // offers
-    fun saveOffer(offer: Offer) = repo.saveOffer(offer)
-    fun deleteOffer(offer: Offer) = repo.deleteOffer(offer)
 
     // regulars
     fun saveRegular(regular: Regular) = repo.saveRegular(regular)

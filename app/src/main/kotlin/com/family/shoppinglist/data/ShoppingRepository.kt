@@ -36,7 +36,6 @@ class ShoppingRepository(
     private val storesCol = household.collection("stores")
     private val regularsCol = household.collection("regulars")
     private val statsCol = household.collection("stats")
-    private val offersCol = household.collection("offers")
     private val resetDoc = household.collection("meta").document("reset")
     private val firestore = household.firestore
     private val maintenanceLock = Mutex()
@@ -49,8 +48,6 @@ class ShoppingRepository(
         .map { list -> list.sortedWith(compareBy({ !it.weekly }, { it.name.lowercase() })) }
     val statsFlow: Flow<List<Stat>> = statsCol.observe { it.toStat() }
         .map { list -> list.sortedWith(compareBy({ -it.count }, { it.displayName.lowercase() })) }
-    val offersFlow: Flow<List<Offer>> = offersCol.observe { it.toOffer() }
-        .map { list -> list.sortedBy { it.product.lowercase() } }
 
     // ---- list ----
 
@@ -107,19 +104,6 @@ class ShoppingRepository(
         storesCol.document(store.id).delete().logFailure("delete store")
     }
 
-    // ---- offers ----
-
-    fun saveOffer(offer: Offer) {
-        if (offer.product.isBlank()) return
-        val clean = offer.copy(product = offer.product.trim(), price = offer.price.trim(), wasPrice = offer.wasPrice.trim())
-        val id = clean.id.ifEmpty { newId() }
-        offersCol.document(id).set(clean.toMap()).logFailure("save offer")
-    }
-
-    fun deleteOffer(offer: Offer) {
-        offersCol.document(offer.id).delete().logFailure("delete offer")
-    }
-
     // ---- regulars ----
 
     /**
@@ -150,8 +134,7 @@ class ShoppingRepository(
      * Idempotent housekeeping, run from the Sunday worker and whenever the app opens on either phone:
      *  - if a Sunday-morning reset has been missed, clear ticked items and restore the weekly regulars
      *    (unticked leftovers carry over to the new week);
-     *  - add any cadence items (e.g. toilet paper every 3 weeks) that have come due;
-     *  - drop offers that have expired.
+     *  - add any cadence items (e.g. toilet paper every 3 weeks) that have come due.
      *
      * Items that come from a regular have a fixed document id (`r-{regularId}`), so if both phones run this at
      * the same moment they write the same document rather than creating duplicates.
@@ -169,7 +152,6 @@ class ShoppingRepository(
 
         val items = itemsCol.get().await().documents.mapNotNull { it.toItem() }
         val regulars = regularsCol.get().await().documents.mapNotNull { it.toRegular() }
-        val offers = offersCol.get().await().documents.mapNotNull { it.toOffer() }
 
         val stay = if (due) items.filterNot { it.checked } else items
         val onList = stay.mapNotNull { it.recurringId }.toMutableSet()
@@ -190,9 +172,6 @@ class ShoppingRepository(
             batch.set(itemsCol.document(recurringItemId(r.id)), r.toListItem().toMap())
             batch.update(regularsCol.document(r.id), "lastAddedOn", today.toEpochDay())
             writes += 2
-        }
-        offers.filter { it.validUntil != null && it.validUntil < today.toEpochDay() }.forEach {
-            batch.delete(offersCol.document(it.id)); writes++
         }
         if (due) {
             batch.set(resetDoc, mapOf("lastResetAt" to latestReset)); writes++
@@ -272,17 +251,4 @@ private fun DocumentSnapshot.toStat(): Stat? = Stat(
     displayName = getString("displayName") ?: return null,
     count = (getLong("count") ?: 0L).toInt().coerceAtLeast(0),
     lastPurchasedAt = getLong("lastPurchasedAt") ?: 0L,
-)
-
-private fun DocumentSnapshot.toOffer(): Offer? = Offer(
-    id = id,
-    product = getString("product") ?: return null,
-    price = getString("price") ?: "",
-    wasPrice = getString("wasPrice") ?: "",
-    storeId = getString("storeId"),
-    validUntil = getLong("validUntil"),
-)
-
-private fun Offer.toMap(): Map<String, Any?> = mapOf(
-    "product" to product, "price" to price, "wasPrice" to wasPrice, "storeId" to storeId, "validUntil" to validUntil,
 )

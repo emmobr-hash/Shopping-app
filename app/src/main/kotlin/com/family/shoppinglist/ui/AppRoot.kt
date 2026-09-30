@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -33,7 +32,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 
 private enum class Tab(val label: String, val icon: ImageVector) {
     List("List", Icons.AutoMirrored.Filled.List),
-    Offers("Offers", Icons.Filled.Star),
     Regulars("Regulars", Icons.Filled.Refresh),
     Settings("Settings", Icons.Filled.Settings),
 }
@@ -99,7 +97,6 @@ private fun MainScreen(vm: AppViewModel, familyCode: String, onLeaveFamily: () -
         Box(Modifier.padding(padding).consumeWindowInsets(padding).imePadding()) {
             when (Tab.entries[tab]) {
                 Tab.List -> ListScreen(vm, onShare = share)
-                Tab.Offers -> OffersScreen(vm)
                 Tab.Regulars -> RegularsScreen(vm)
                 Tab.Settings -> SettingsScreen(vm, familyCode, onShareCode = shareCode, onLeaveFamily = onLeaveFamily)
             }

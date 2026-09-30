@@ -211,21 +211,6 @@ private fun ItemRow(ui: ItemUi, vm: AppViewModel, onEdit: () -> Unit) {
                 textDecoration = if (item.checked) TextDecoration.LineThrough else null,
             )
         },
-        supportingContent = if (ui.offers.isEmpty()) null else {
-            {
-                Column {
-                    ui.offers.forEach { o ->
-                        Text(
-                            buildString {
-                                append("On offer: ").append(o.offer.product).append(" ").append(o.offer.price)
-                                o.storeName?.let { append(" at ").append(it) }
-                            },
-                            color = MaterialTheme.colorScheme.tertiary,
-                        )
-                    }
-                }
-            }
-        },
         trailingContent = {
             IconButton(onClick = { vm.deleteItem(item) }) { Icon(Icons.Filled.Delete, "Delete ${item.name}") }
         },

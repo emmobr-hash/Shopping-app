@@ -17,16 +17,7 @@ An Android app for keeping the family shopping list in one place.
 - **Sunday refresh** – at 06:00 every Sunday, ticked items are cleared and the weekly regulars are restored.
   Anything you didn't tick carries over. If the phones were off, the reset is applied the next time either
   app runs.
-- **Special offers** – record deals you spot (product, price, store, end date). Offers matching something on
-  your list, one of your regulars, or something you've bought 3+ times are highlighted, and shown under the
-  item on the list. Expired offers tidy themselves away.
 - **Share** – send the outstanding list (grouped by store) to WhatsApp or anywhere else.
-
-## Not built yet
-
-- **Automatic offers.** None of Dunnes, SuperValu, Aldi or Lidl publishes a public offers API, and scraping
-  their sites is against their terms and breaks often (the only structured data I found is a paid
-  third-party scraping service that doesn't cover Lidl). So offers are entered by hand for now.
 
 ## Setting up Firebase (one-off, ~10 minutes, free)
 
@@ -51,7 +42,7 @@ only share it within the family.
 
 | Path | What |
 | --- | --- |
-| `core/` | Plain Kotlin, unit-tested: the Sunday schedule, cadence planner, and item-to-offer name matching |
+| `core/` | Plain Kotlin, unit-tested: the Sunday schedule, cadence planner, and item-name normalising |
 | `app/` | Android app (Jetpack Compose, Firebase Firestore, WorkManager) |
 | `firestore.rules` | Security rules to paste into Firebase |
 

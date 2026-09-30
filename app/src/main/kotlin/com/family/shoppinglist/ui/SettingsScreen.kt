@@ -137,7 +137,7 @@ fun SettingsScreen(vm: AppViewModel, familyCode: String, onShareCode: () -> Unit
         AlertDialog(
             onDismissRequest = { deleting = null },
             title = { Text("Delete ${store.name}?") },
-            text = { Text("Items, regulars and offers for this supermarket are kept, but will show as \"Any store\".") },
+            text = { Text("Items and regulars for this supermarket are kept, but will show as \"Any store\".") },
             confirmButton = { TextButton(onClick = { vm.deleteStore(store); deleting = null }) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
         )

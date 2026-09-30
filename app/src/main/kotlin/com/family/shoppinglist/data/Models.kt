@@ -46,14 +46,3 @@ data class Item(
 
 /** How often each thing has been ticked off, to work out what you "frequently buy". */
 data class Stat(val key: String, val displayName: String, val count: Int, val lastPurchasedAt: Long)
-
-/** A supermarket special. Prices are free text ("€1.50", "2 for €3") since deals come in many shapes. */
-data class Offer(
-    val id: String = "",
-    val product: String,
-    val price: String,
-    val wasPrice: String = "",
-    val storeId: String? = null,
-    /** Epoch day the offer ends (inclusive), or null if unknown. */
-    val validUntil: Long? = null,
-)
