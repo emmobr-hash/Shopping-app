@@ -211,34 +211,43 @@ private fun <T : Any> CollectionReference.observe(map: (DocumentSnapshot) -> T?)
     awaitClose { registration.remove() }
 }
 
-private fun DocumentSnapshot.toItem(): Item? = Item(
-    id = id,
-    name = getString("name") ?: return null,
-    quantity = getString("quantity") ?: "",
-    storeId = getString("storeId"),
-    checked = getBoolean("checked") ?: false,
-    addedAt = getLong("addedAt") ?: 0L,
-    recurringId = getString("recurringId"),
-)
+private fun DocumentSnapshot.toItem(): Item? {
+    val name = getString("name") ?: return null
+    return Item(
+        id = id,
+        name = name,
+        quantity = getString("quantity") ?: "",
+        storeId = getString("storeId"),
+        checked = getBoolean("checked") ?: false,
+        addedAt = getLong("addedAt") ?: 0L,
+        recurringId = getString("recurringId"),
+    )
+}
 
 private fun Item.toMap(): Map<String, Any?> = mapOf(
     "name" to name, "quantity" to quantity, "storeId" to storeId,
     "checked" to checked, "addedAt" to addedAt, "recurringId" to recurringId,
 )
 
-private fun DocumentSnapshot.toStore(): Store? = Store(id, getString("name") ?: return null)
+private fun DocumentSnapshot.toStore(): Store? {
+    val name = getString("name") ?: return null
+    return Store(id, name)
+}
 
-private fun DocumentSnapshot.toRegular(): Regular? = Regular(
-    id = id,
-    name = getString("name") ?: return null,
-    quantity = getString("quantity") ?: "",
-    storeId = getString("storeId"),
-    weekly = getBoolean("weekly") ?: true,
-    cadenceAmount = (getLong("cadenceAmount") ?: 1L).toInt().coerceAtLeast(1),
-    cadenceUnit = getString("cadenceUnit") ?: "WEEKS",
-    startsOn = getLong("startsOn") ?: 0L,
-    lastAddedOn = getLong("lastAddedOn"),
-)
+private fun DocumentSnapshot.toRegular(): Regular? {
+    val name = getString("name") ?: return null
+    return Regular(
+        id = id,
+        name = name,
+        quantity = getString("quantity") ?: "",
+        storeId = getString("storeId"),
+        weekly = getBoolean("weekly") ?: true,
+        cadenceAmount = (getLong("cadenceAmount") ?: 1L).toInt().coerceAtLeast(1),
+        cadenceUnit = getString("cadenceUnit") ?: "WEEKS",
+        startsOn = getLong("startsOn") ?: 0L,
+        lastAddedOn = getLong("lastAddedOn"),
+    )
+}
 
 private fun Regular.toMap(): Map<String, Any?> = mapOf(
     "name" to name, "quantity" to quantity, "storeId" to storeId, "weekly" to weekly,
@@ -246,9 +255,12 @@ private fun Regular.toMap(): Map<String, Any?> = mapOf(
     "startsOn" to startsOn, "lastAddedOn" to lastAddedOn,
 )
 
-private fun DocumentSnapshot.toStat(): Stat? = Stat(
-    key = id,
-    displayName = getString("displayName") ?: return null,
-    count = (getLong("count") ?: 0L).toInt().coerceAtLeast(0),
-    lastPurchasedAt = getLong("lastPurchasedAt") ?: 0L,
-)
+private fun DocumentSnapshot.toStat(): Stat? {
+    val displayName = getString("displayName") ?: return null
+    return Stat(
+        key = id,
+        displayName = displayName,
+        count = (getLong("count") ?: 0L).toInt().coerceAtLeast(0),
+        lastPurchasedAt = getLong("lastPurchasedAt") ?: 0L,
+    )
+}
